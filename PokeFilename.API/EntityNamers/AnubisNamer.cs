@@ -37,15 +37,13 @@ namespace PokeFilename.API
             return $"{pk.Species:000}{form}{shinytype} - {speciesName} - {GetNature(pk)} - {IVList}{OTInfo} - {chk:X4}{pk.EncryptionConstant:X8}";
         }
 
-        private static string GetNature(INature pk)
+        private static string GetNature(PKM pk)
         {
             var nature = pk.Nature;
-            var natureIndex = (int)nature;
             var strings = Util.GetNaturesList("en");
-
-            if ((uint)natureIndex >= strings.Length)
-                natureIndex = 0;
-            return strings[natureIndex];
+            if ((uint)nature >= strings.Length)
+                nature = 0;
+            return strings[(uint)nature];
         }
 
         private static string GetShinyTypeString(PKM pk)

@@ -26,16 +26,26 @@ namespace PokeFilename.API
     {
         public static string GetValue(this PKM pk, string prop) => prop switch
         {
-            "ShinyType"             => GetShinyTypeString(pk),
-            "CharacteristicText"    => GetCharacteristicText(pk),
-            "ConditionalForm"       => GetConditionalForm(pk),
-            "FormName"              => GetFormName(pk),
-            "ConditionalFormName"   => GetConditionalFormName(pk),
-            "Gigantamax"            => GetGigantamax(pk),
+            "ShinyType" => GetShinyTypeString(pk),
+            "CharacteristicText" => GetCharacteristicText(pk),
+            "ConditionalForm" => GetConditionalForm(pk),
+            "FormName" => GetFormName(pk),
+            "ConditionalFormName" => GetConditionalFormName(pk),
+            "Gigantamax" => GetGigantamax(pk),
             "ConditionalGigantamax" => GetConditionalGigantamax(pk),
-            "Legality"              => GetLegalityStatus(pk),
-            "ItemName"              => GetItemName(pk),
-            _                       => $"{{{prop}}}"
+            "Legality" => GetLegalityStatus(pk),
+            "ItemName" => GetItemName(pk),
+            "ConditionalScale" => GetConditionalScale(pk),
+            "ConditionalTeraType" => GetConditionalTeraType(pk),
+            "ConditionalStatNature" => GetConditionalStatNature(pk),
+            "ConditionalStatNatureName" => GetConditionalStatNatureName(pk),
+            "ConditionalGender" => GetConditionalGender(pk),
+            "Alpha" => GetAlpha(pk),
+            "ConditionalAlpha" => GetConditionalAlpha(pk),
+            "ConditionalNickname" => GetConditionalNickname(pk),
+            "PaddedDisplaySID" => GetPaddedDisplaySID(pk),
+            "PaddedDisplayTID" => GetPaddedDisplayTID(pk),
+            _ => $"{{{prop}}}"
         };
 
         // Extensions
@@ -45,7 +55,8 @@ namespace PokeFilename.API
         private static string GetConditionalGigantamax(PKM pk) => (pk is IGigantamax g && g.CanGigantamax) ? "(Gigantamax)" : string.Empty;
         private static string GetCharacteristicText(PKM pk) => pk.Characteristic >= 0 ? Util.GetCharacteristicsList("en")[pk.Characteristic] : string.Empty;
 
-        private static string GetShinyTypeString(PKM pk) { //Copied from AnubisNamer
+        private static string GetShinyTypeString(PKM pk)
+        { //Copied from AnubisNamer
             if (!pk.IsShiny)
                 return string.Empty;
             if (pk.Format >= 8 && (pk.ShinyXor == 0 || pk.FatefulEncounter || pk.Version == GameVersion.GO))
@@ -53,13 +64,15 @@ namespace PokeFilename.API
             return " ★";
         }
 
-        private static string GetFormName(PKM pk) {
+        private static string GetFormName(PKM pk)
+        {
             var Strings = GameInfo.GetStrings(GameLanguage.DefaultLanguage);
             string FormString = ShowdownParsing.GetStringFromForm(pk.Form, Strings, pk.Species, pk.Context);
             string FormName = ShowdownParsing.GetShowdownFormName(pk.Species, FormString);
             return FormName;
         }
-        private static string GetConditionalFormName(PKM pk) {
+        private static string GetConditionalFormName(PKM pk)
+        {
             string formName = GetFormName(pk);
             return string.IsNullOrEmpty(formName) ? string.Empty : $"({formName})";
         }
@@ -73,5 +86,46 @@ namespace PokeFilename.API
                 return items[pk.HeldItem];
             return "NoItem";
         }
+
+        private static string GetConditionalScale(PKM pk)
+        {
+            if (pk is IScaledSize3 s)
+                return $"- {s.Scale}";
+            if (pk is IScaledSize h)
+                return $"- {h.HeightScalar}";
+            return string.Empty;
+        }
+
+        private static string GetConditionalTeraType(PKM pk)
+        {
+            if (pk is not ITeraType t)
+                return string.Empty;
+            var type = t.GetTeraType();
+            var type_str = ((byte)type == TeraTypeUtil.Stellar) ? "Stellar" : type.ToString();
+            return $"- Tera {type_str}";
+        }
+
+        private static string GetStatNature(PKM pk)
+        {
+            var nature = pk.StatNature;
+            var strings = Util.GetNaturesList("en");
+            if ((uint)nature >= strings.Length)
+                nature = 0;
+            return strings[(uint) nature];
+        }
+
+        private static string GetConditionalStatNature(PKM pk) => (pk.Nature != pk.StatNature) ? $"➔{pk.StatNature:00}" : string.Empty;
+        private static string GetConditionalStatNatureName(PKM pk) => (pk.Nature != pk.StatNature) ? $"➔{GetStatNature(pk)}" : string.Empty;
+
+        private static string GetConditionalGender(PKM pk) => ((Gender)pk.Gender is Gender.Male or Gender.Female) ? GameInfo.GenderSymbolUnicode[pk.Gender] : string.Empty;
+
+        private static string GetAlpha(PKM pk) => (pk is IAlpha a && a.IsAlpha) ? "Alpha" : string.Empty;
+        private static string GetConditionalAlpha(PKM pk) => (pk is IAlpha a && a.IsAlpha) ? "(Alpha)" : string.Empty;
+
+        private static string GetConditionalNickname(PKM pk) => pk.IsNicknamed ? $"[{pk.Nickname}]" : string.Empty;
+
+        private static bool UseTID7(PKM pk) => pk.Generation >= 7 || (pk.Format == 9 && pk.IsEgg);  // Copied from AnubisNamer.GetRegular
+        private static string GetPaddedDisplaySID(PKM pk) => UseTID7(pk) ? $"{pk.DisplaySID:0000}" : $"{pk.SID16:00000}";
+        private static string GetPaddedDisplayTID(PKM pk) => UseTID7(pk) ? $"{pk.DisplayTID:000000}" : $"{pk.TID16:00000}";
     }
 }

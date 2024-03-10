@@ -13,6 +13,15 @@ namespace PokeFilename.API
             return GetRegular(obj);
         }
 
+        private static string GetConditionalTeraType(PKM pk)
+        {
+            if (pk is not ITeraType t)
+                return string.Empty;
+            var type = t.GetTeraType();
+            var type_str = ((byte)type == TeraTypeUtil.Stellar) ? "Stellar" : type.ToString();
+            return $"Tera({type_str})";
+        }
+
         private static string GetRegular(PKM pk)
         {
             string form = pk.Form > 0 ? $"-{pk.Form:00}" : string.Empty;
@@ -28,7 +37,7 @@ namespace PokeFilename.API
                 speciesName += "-Gmax";
 
             // Include version in the return string
-            return $"{speciesName}{shinytype}-{GetNature(pk)}-{GetAbility(pk)}-{IVList}-{metYearString}-{GetVersion(pk)}";
+            return $"{speciesName}{shinytype}-{GetConditionalTeraType}-{GetNature(pk)}-{GetAbility(pk)}-{IVList}-{metYearString}-{GetVersion(pk)}";
         }
 
         private static string GetVersion(PKM pk)
@@ -54,15 +63,13 @@ namespace PokeFilename.API
             return "Unknown";
         }
 
-        private static string GetNature(INature pk)
+        private static string GetNature(PKM pk)
         {
             var nature = pk.Nature;
-            var natureIndex = (int)nature;
             var strings = Util.GetNaturesList("en");
-
-            if ((uint)natureIndex >= strings.Length)
-                natureIndex = 0; 
-            return strings[natureIndex]; 
+            if ((uint)nature >= strings.Length)
+                nature = 0;
+            return strings[(uint)nature];
         }
 
 
