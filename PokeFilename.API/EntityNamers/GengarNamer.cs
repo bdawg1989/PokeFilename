@@ -36,8 +36,7 @@ namespace PokeFilename.API
             if (pk is IGigantamax { CanGigantamax: true })
                 speciesName += "-Gmax";
 
-            // Include version in the return string
-            return $"{speciesName}{shinytype}-{GetConditionalTeraType}-{GetNature(pk)}-{GetAbility(pk)}-{IVList}-{metYearString}-{GetVersion(pk)}";
+            return $"{speciesName}{shinytype}-{GetConditionalTeraType(pk)}-{GetNature(pk)}-{GetAbility(pk)}-{IVList}-{metYearString}-{GetVersion(pk)}";
         }
 
         private static string GetVersion(PKM pk)
